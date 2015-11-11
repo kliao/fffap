@@ -1,6 +1,5 @@
-﻿type Tree<'LeafData,'INodeData> =
-    | LeafNode of 'LeafData
-    | InternalNode of 'INodeData * Tree<'LeafData,'INodeData> seq
+﻿#load "Tree.fs"
+open Tree
 
 type CurveType = Volatility | Dividends | Rates | FundingSpread
 type FlatParameter = {flatValue: float; curveType: CurveType}
@@ -51,3 +50,28 @@ let holdingContext =
 let mainContext =
     let container = Token "blue"
     InternalNode (container, [ibmContext; holdingContext])
+
+
+let description context =
+
+    let fLeaf leafData = 
+        match leafData with
+        | Flat f ->
+            sprintf "flat %A at %f" f.curveType f.flatValue
+        | Curve c ->
+            sprintf "%A curve" c.curveType
+
+    let fNode nodeData innerTexts = 
+        let innerText = String.concat " & " innerTexts 
+        match nodeData with
+        | Token t ->
+            sprintf "%s under token %s" innerText t
+        | Symbol s ->
+            sprintf "%s for symbol %s" innerText s
+        | Holding h ->
+            sprintf "%s for holding %s" innerText h
+
+    // main call
+    Tree.cata fLeaf fNode context
+
+mainContext |> description
